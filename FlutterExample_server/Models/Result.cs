@@ -14,6 +14,7 @@
         /// </summary>
         public string info { get; set; } = string.Empty;
         public UserModel? data { get; set; }
+        public List<BloodPressureModel>? bpm_data { get; set; }
     }
     public class UserModel
     {
