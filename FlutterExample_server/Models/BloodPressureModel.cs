@@ -5,7 +5,7 @@
         /// <summary>
         /// 血壓編號
         /// </summary>
-        public int bpm_id { get; set; }
+        public int bpmid { get; set; }
         /// <summary>
         /// 0:未授權
         /// 1:來自app
@@ -46,7 +46,7 @@
         /// </summary>
         public sbyte mode { get; set; }
 
-        public DateTime update_date { get; set; }
+        public DateTime updatedate { get; set; }
         /// <summary>
         /// 筆記內容
         /// </summary>
