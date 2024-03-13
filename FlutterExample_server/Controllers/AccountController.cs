@@ -75,5 +75,12 @@ namespace FlutterExample_server.Controllers
 
             return memberModel;
         }
+        [HttpGet]
+        [Route("[action]")]
+        public IActionResult GetCode(string redirect_uri)
+        {
+            string url = redirect_uri + "?code=test1234";
+            return Redirect(url);
+        }
     }
 }
