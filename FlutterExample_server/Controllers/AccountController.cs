@@ -82,5 +82,17 @@ namespace FlutterExample_server.Controllers
             string url = redirect_uri + "?code=test1234";
             return Redirect(url);
         }
+        [HttpGet]
+        [Route("[action]")]
+        public IActionResult TestCookie(string redirect_uri)
+        {
+            HttpContext.Response.Cookies.Append("redirect_uri", redirect_uri);
+            return RedirectToAction("LoadCookie", "Account");
+        }
+        public IActionResult LoadCookie()
+        {
+            string? url = HttpContext.Request.Cookies["redirect_uri"];
+            return Redirect(url);
+        }
     }
 }
