@@ -361,12 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/FlutterExample_server/wwwroot/main.dart.js
+/FlutterExample_server/wwwroot/assets
+/FlutterExample_server/wwwroot/canvaskit
+/FlutterExample_server/wwwroot/icons
 /FlutterExample_server/wwwroot/manifest.json
-/FlutterExample_server/wwwroot/version.json
-/FlutterExample_server/wwwroot/flutter.js
+/FlutterExample_server/wwwroot/main.dart.js
 /FlutterExample_server/wwwroot/flutter_service_worker.js
+/FlutterExample_server/wwwroot/flutter_bootstrap.js
+/FlutterExample_server/wwwroot/flutter.js
+/FlutterExample_server/wwwroot/auth.html
+/FlutterExample_server/wwwroot/version.json
 /FlutterExample_server/wwwroot/.last_build_id
-FlutterExample_server/wwwroot/icons/
-FlutterExample_server/wwwroot/canvaskit/
-FlutterExample_server/wwwroot/assets/
