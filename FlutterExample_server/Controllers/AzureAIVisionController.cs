@@ -34,11 +34,12 @@ namespace FlutterExample_server.Controllers
             return View();
         }
         [HttpPost]
-        public IActionResult Back(double sys)
+        [ValidateAntiForgeryToken]
+        public IActionResult Back([FromBody] BloodPressureModel data)
         {
             string? uri = string.Empty;
             Request.Cookies.TryGetValue("redirect_uri", out uri);
-            return Redirect(uri + $"?sys={sys}");
+            return Ok(new { redirect_uri = uri + $"?sys={data.sys}&dia={data.dia}&pul={data.pul}" });
         }
         [HttpPost]
         [ValidateAntiForgeryToken]

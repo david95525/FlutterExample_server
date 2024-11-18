@@ -13,6 +13,7 @@ var pulElement = document.getElementById('pul');
 var base64 = "";
 var resultlist = [];
 document.getElementById('Scan').addEventListener("click", startCam);
+document.getElementById("scan_save_button").addEventListener("click", Back);
 //date
 let nowdate = moment(new Date()).format("YYYY/MM/DD");
 dateElement.value = nowdate;
@@ -107,7 +108,21 @@ function Upload() {
             }
         }).catch(err => { console.log(err); });
 }
-
+function Back() {
+    let sys = document.getElementById("sys").value;
+    let dia = document.getElementById("dia").value;
+    let pul = document.getElementById("pul").value;
+    let data = { sys: sys, dia: dia, pul: pul };
+    let VerificationToken = document.getElementsByName("__RequestVerificationToken")[0].value;
+    let config = { headers: { 'requestverificationtoken': VerificationToken } }
+    axios.post("/AzureAIVision/Back", data, config)
+        .then(function (response) {
+            if (response.status === 200) {
+                let result = response.data;
+                location.href = result.redirect_uri;
+            }
+        }).catch(err => { console.log(err); });
+}
 
 
 
