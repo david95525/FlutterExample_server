@@ -28,7 +28,7 @@ namespace FlutterExample_server.Controllers
         {
             if (string.IsNullOrEmpty(redirect_uri))
             {
-                return Redirect("/");
+                redirect_uri = "/";
             }
             Response.Cookies.Append("redirect_uri", redirect_uri);
             return View();
@@ -48,8 +48,6 @@ namespace FlutterExample_server.Controllers
 
             Task.Run(() =>
             {
-                Claim? user = User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.Name);
-                ArgumentNullException.ThrowIfNull(user);
                 string file = Path.Combine(_env.WebRootPath, "scan", "2038", "1");
                 if (!Directory.Exists(file))
                 {
@@ -85,7 +83,7 @@ namespace FlutterExample_server.Controllers
                 ismicrolife = ContainMicrolife,
                 sys = sys,
                 dia = dia,
-                pul = pul
+                pul = pul,
             });
         }
 

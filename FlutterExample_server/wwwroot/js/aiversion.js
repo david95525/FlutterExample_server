@@ -1,7 +1,7 @@
 ﻿var videoElement = document.getElementById("videoElement");
 var scanElement = document.getElementById('Scan');
-var loadingElement = document.getElementById("scan_lodding");
 let scanningElement = document.getElementById("scanning_view");
+let closeElement = document.getElementById("Close");
 //input
 var dateElement = document.getElementById('add_date_scan');
 var hourElement = document.getElementById('hour_scan');
@@ -12,18 +12,15 @@ var diaElement = document.getElementById('dia');
 var pulElement = document.getElementById('pul');
 var base64 = "";
 var resultlist = [];
-document.getElementById('Scan').addEventListener("click", startCam);
+scanElement.addEventListener("click", startCam);
 document.getElementById("scan_save_button").addEventListener("click", Back);
+closeElement.addEventListener("click", Close);
 //date
 let nowdate = moment(new Date()).format("YYYY/MM/DD");
 dateElement.value = nowdate;
 hourElement.value = 10;
 minuteElement.value = 12;
 //default
-if (document.getElementById("capture")) {
-    document.getElementById("capture").remove();
-}
-loadingElement.setAttribute("hidden", "");
 scanningElement.setAttribute("hidden", "");
 videoElement.setAttribute("hidden", "");
 scanElement.innerText = "Scan";
@@ -33,22 +30,12 @@ sysElement.value = "";
 diaElement.value = "";
 pulElement.value = "";
 
-function RenderscanDate() {
-    try {
-
-    }
-    catch (e) {
-        console.log(e);
-    }
-}
+var timeoutID;
+var tracks;
 function startCam() {
-    let captureElement = document.createElement('button');
-    captureElement.classList.add("btn-style-2");
-    captureElement.id = "capture";
-    captureElement.textContent = "Capture";
-    scanElement.after(captureElement);
     scanElement.setAttribute("hidden", "");
     videoElement.removeAttribute("hidden");
+    closeElement.removeAttribute("hidden");
     //scan
     const constraints = { video: { facingMode: "environment" } };
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -56,10 +43,9 @@ function startCam() {
             .getUserMedia(constraints)
             .then(function (stream) {
                 videoElement.srcObject = stream;
+                tracks = stream.getTracks();
                 scanningElement.removeAttribute("hidden");
-                captureElement.addEventListener("click", function () {
-                    captureElement.remove();
-                    loadingElement.removeAttribute("hidden");
+                timeoutID = window.setInterval(function () {
                     let canvas = document.createElement("canvas");
                     canvas.width = videoElement.videoWidth;
                     canvas.height = videoElement.videoHeight;
@@ -67,13 +53,8 @@ function startCam() {
                     ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(videoElement, 0, 0, 256, 256);
                     base64 = canvas.toDataURL("image/png", 1);
-                    //hidden    
-                    scanningElement.setAttribute("hidden", "");
-                    videoElement.setAttribute("hidden", "");
-                    scanElement.innerText = "Rescan";
-                    scanElement.removeAttribute("hidden");
-                    Upload();
-                });
+                    ImageAnalyze();
+                }, 5000);
             })
             .catch(function (error) {
                 console.log("無法取得視訊串流：", error);
@@ -85,7 +66,7 @@ function startCam() {
         alert("您使用的瀏覽器不支援視訊串流，請使用其他瀏覽器，再重新開啟頁面！");
     }
 }
-function Upload() {
+function ImageAnalyze() {
     var base64String = base64.replace('data:image/png;base64,', '');
     let data = { imagestring: base64String };
     let VerificationToken = document.getElementsByName("__RequestVerificationToken")[0].value;
@@ -97,6 +78,8 @@ function Upload() {
                 sysElement.value = result.sys;
                 diaElement.value = result.dia;
                 pulElement.value = result.pul;
+                let predictions = [{ value: result.sys, x: 20, y: 25 }, { value: result.dia, x: 20, y: 55 }, { value: result.pul, x: 20, y: 85 }];
+                renderPredictions(predictions);
                 let content = "";
                 resultlist = result.resultlist;
                 resultlist.forEach(val => {
@@ -104,9 +87,22 @@ function Upload() {
                 });
                 content = content + " " + result.confidence;
                 document.getElementById("content").textContent = content;
-                loadingElement.setAttribute("hidden", "");
             }
         }).catch(err => { console.log(err); });
+}
+function Close() {
+    if (timeoutID) {
+        window.clearInterval(timeoutID);
+    }
+    document.getElementById("result_show").remove();
+    tracks.forEach((track) => {
+        track.stop();
+    });
+    videoElement.srcObject = null;
+    videoElement.setAttribute("hidden", "");
+    scanningElement.setAttribute("hidden", "");
+    closeElement.setAttribute("hidden", "");
+    scanElement.removeAttribute("hidden");
 }
 function Back() {
     let sys = document.getElementById("sys").value;
@@ -123,6 +119,30 @@ function Back() {
             }
         }).catch(err => { console.log(err); });
 }
+const renderPredictions = function (predictions) {
+    let canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    canvas.id = "result_show";
+    let ctx = canvas.getContext("2d");
+    let scale = 1;
+    predictions.forEach(function (prediction) {
+        let width = 10;
+        let height = 10;
+        let x = (prediction.x - width / 2) / scale;
+        let y = (prediction.y - height / 2) / scale;
 
-
+        // Draw the text last to ensure it's on top.
+        ctx.font = "16px sans-serif";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#000000";
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 0.5;
+        ctx.fillText(prediction.value, x + 4, y + 1);
+        ctx.strokeText(prediction.value, x + 4, y + 1);
+    });
+    canvas.style.top = (document.documentElement.clientHeight - 250) / 2;
+    canvas.style.left = (document.documentElement.clientHeight - 300) / 2;
+    document.body.append(canvas);
+};
 
