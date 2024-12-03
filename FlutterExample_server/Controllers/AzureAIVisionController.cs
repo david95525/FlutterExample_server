@@ -68,12 +68,13 @@ namespace FlutterExample_server.Controllers
             List<string> resultlist = new List<string>();
             int sys = 0, dia = 0, pul = 0;
             bool ContainMicrolife = false;
+            List<LocationModel> locations = new List<LocationModel>();
             if (result.Caption.Confidence > 0.6)
             {
                 foreach (DetectedTextBlock block in result.Read.Blocks)
                 {
                     IReadOnlyList<DetectedTextLine> lines = block.Lines;
-                    (sys, dia, pul, ContainMicrolife, resultlist) = Process(lines, ContainMicrolife, resultlist);
+                    (sys, dia, pul, ContainMicrolife, resultlist, locations) = Process(lines, ContainMicrolife, resultlist);
                 }
             }
             return Ok(new
@@ -84,15 +85,28 @@ namespace FlutterExample_server.Controllers
                 sys = sys,
                 dia = dia,
                 pul = pul,
+                locations = locations
             });
         }
 
-        private (int sys, int dia, int pul, bool ContainMicrolife, List<string> resultlist)
+        private (int sys, int dia, int pul, bool ContainMicrolife, List<string> resultlist, List<LocationModel> locations)
             Process(IReadOnlyList<DetectedTextLine> lines, bool ContainMicrolife, List<string> resultlist)
         {
             int number = 0, order = 0, sys = 0, dia = 0, pul = 0;
+            List<LocationModel> locations = new List<LocationModel>();
             for (int i = 0; i < lines.Count; i++)
             {
+                LocationModel location = new LocationModel
+                {
+                    x1 = lines[i].BoundingPolygon[0].X,
+                    x2 = lines[i].BoundingPolygon[1].X,
+                    x3 = lines[i].BoundingPolygon[2].X,
+                    x4 = lines[i].BoundingPolygon[3].X,
+                    y1 = lines[i].BoundingPolygon[0].Y,
+                    y2 = lines[i].BoundingPolygon[1].Y,
+                    y3 = lines[i].BoundingPolygon[2].Y,
+                    y4 = lines[i].BoundingPolygon[3].Y,
+                };
                 string text = lines[i].Text.Replace(" ", "");
                 resultlist.Add(text);
                 if (text.Contains("microlife"))
@@ -105,6 +119,7 @@ namespace FlutterExample_server.Controllers
                         if (pul == number) pul = 0;
                         sys = number;
                         order = 1;
+
                         continue;
                     }
                 }
@@ -136,16 +151,19 @@ namespace FlutterExample_server.Controllers
                         switch (order)
                         {
                             case 0:
-                                sys = number; order++;
+                                sys = number;
+                                order++;
+                                locations.Add(location);
                                 break;
                             case 1:
                                 dia = number; order++;
+                                locations.Add(location);
                                 break;
                             case 2:
                                 pul = number; order++;
+                                locations.Add(location);
                                 break;
                         }
-
                     }
                 }
             }
@@ -153,11 +171,23 @@ namespace FlutterExample_server.Controllers
             {
                 sys = 0; dia = 0; pul = 0;
             }
-            return (sys, dia, pul, ContainMicrolife, resultlist);
+            return (sys, dia, pul, ContainMicrolife, resultlist, locations);
         }
         public class ImageModel
         {
             public string imagestring { get; set; } = string.Empty;
+        }
+        public class LocationModel
+        {
+            //順時鐘
+            public int x1 { get; set; }
+            public int x2 { get; set; }
+            public int x3 { get; set; }
+            public int x4 { get; set; }
+            public int y1 { get; set; }
+            public int y2 { get; set; }
+            public int y3 { get; set; }
+            public int y4 { get; set; }
         }
     }
 }

@@ -32,6 +32,19 @@ pulElement.value = "";
 
 var timeoutID;
 var tracks;
+function videoDimensions(video) {
+    // Ratio of the video's intrisic dimensions
+    let videoRatio = video.videoWidth / video.videoHeight;
+    // The width and height of the video element
+    let width = video.offsetWidth, height = video.offsetHeight;
+    // The ratio of the element's width to its height
+    let elementRatio = width / height;
+    // If the video element is short and wide
+    if (elementRatio > videoRatio) width = height * videoRatio;
+    // It must be tall and thin, or exactly equal to the original ratio
+    else height = width / videoRatio;
+    return [width, height];
+}
 function startCam() {
     scanElement.setAttribute("hidden", "");
     videoElement.removeAttribute("hidden");
@@ -45,16 +58,17 @@ function startCam() {
                 videoElement.srcObject = stream;
                 tracks = stream.getTracks();
                 scanningElement.removeAttribute("hidden");
-                timeoutID = window.setInterval(function () {
+                timeoutID = window.setTimeout(function () {
                     let canvas = document.createElement("canvas");
-                    canvas.width = videoElement.videoWidth;
-                    canvas.height = videoElement.videoHeight;
+                    let [width, height] = videoDimensions(videoElement);
+                    canvas.width = width;
+                    canvas.height = height;
                     let ctx = canvas.getContext("2d");
                     ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(videoElement, 0, 0, 256, 256);
+                    ctx.drawImage(videoElement, 0, 0, width, height);
                     base64 = canvas.toDataURL("image/png", 1);
                     ImageAnalyze();
-                }, 5000);
+                }, 2000);
             })
             .catch(function (error) {
                 console.log("無法取得視訊串流：", error);
@@ -78,7 +92,32 @@ function ImageAnalyze() {
                 sysElement.value = result.sys;
                 diaElement.value = result.dia;
                 pulElement.value = result.pul;
-                let predictions = [{ value: result.sys, x: 20, y: 25 }, { value: result.dia, x: 20, y: 55 }, { value: result.pul, x: 20, y: 85 }];
+                let locations = result.locations;
+                if (locations.length === 0) {
+                    locations = [{ x1: 0, x2: 0, y1: 0, y3: 0 }, { x1: 0, x2: 0, y1: 0, y3: 0 }, { x1: 0, x2: 0, y1: 0, y3: 0 }]
+                }
+                let predictions = [
+                    {
+                        value: result.sys.toString(), x: 20, y: 25,
+                        x1: locations[0].x1,
+                        x2: locations[0].x2,
+                        y1: locations[0].y1,
+                        y3: locations[0].y3
+                    },
+                    {
+                        value: result.dia.toString(), x: 20, y: 55,
+                        x1: locations[1].x1,
+                        x2: locations[1].x2,
+                        y1: locations[1].y1,
+                        y3: locations[1].y3
+                    },
+                    {
+                        value: result.pul.toString(), x: 20, y: 85,
+                        x1: locations[2].x1,
+                        x2: locations[2].x2,
+                        y1: locations[2].y1,
+                        y3: locations[2].y3
+                    }];
                 renderPredictions(predictions);
                 let content = "";
                 resultlist = result.resultlist;
@@ -94,7 +133,9 @@ function Close() {
     if (timeoutID) {
         window.clearInterval(timeoutID);
     }
-    document.getElementById("result_show").remove();
+    if (document.getElementById("result_show")) {
+        document.getElementById("result_show").remove();
+    }
     tracks.forEach((track) => {
         track.stop();
     });
@@ -121,28 +162,48 @@ function Back() {
 }
 const renderPredictions = function (predictions) {
     let canvas = document.createElement("canvas");
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
     canvas.id = "result_show";
+    let [width, height] = videoDimensions(videoElement);
+    canvas.width = width;
+    canvas.height = height;
     let ctx = canvas.getContext("2d");
-    let scale = 1;
     predictions.forEach(function (prediction) {
-        let width = 10;
-        let height = 10;
-        let x = (prediction.x - width / 2) / scale;
-        let y = (prediction.y - height / 2) / scale;
-
+        if (prediction.x1 != 0 && prediction.value != "0") {
+            let width = prediction.x2 - prediction.x1;
+            let height = prediction.y3 - prediction.y1;
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(
+                prediction.x1,
+                prediction.y1,
+                width,
+                height
+            );
+        }
+        let textwidth = 10;
+        let textheight = 10;
+        let length = 1;
+        if (prediction.value.length === 1) {
+            length = 10;
+        }
+        else if (prediction.value.length === 2) {
+            length = 4;
+        }
+        let x = (prediction.x + textwidth / 2);
+        let y = (prediction.y + textheight / 2);
+        ctx.fillStyle = "red";
+        ctx.fillRect(prediction.x, prediction.y, 44, 26);
         // Draw the text last to ensure it's on top.
-        ctx.font = "16px sans-serif";
+        ctx.font = "20px sans-serif";
         ctx.textBaseline = "top";
-        ctx.fillStyle = "#000000";
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 0.5;
-        ctx.fillText(prediction.value, x + 4, y + 1);
-        ctx.strokeText(prediction.value, x + 4, y + 1);
+        ctx.fillStyle = "white";
+        ctx.fillText(prediction.value, x + length, y + 1);
+        //ctx.strokeStyle = '#000000';
+        //ctx.lineWidth = 0.5;
+        //ctx.strokeText(prediction.value, x + length, y + 1);
+
     });
-    canvas.style.top = (document.documentElement.clientHeight - 250) / 2;
-    canvas.style.left = (document.documentElement.clientHeight - 300) / 2;
     document.body.append(canvas);
 };
+
 
