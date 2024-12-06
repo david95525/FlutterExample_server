@@ -2,22 +2,5 @@
   "version": "1.0",
   "defaultProvider": "unpkg",
   "libraries": [
-    {
-      "library": "jquery@3.7.1",
-      "destination": "wwwroot/lib/jquery/"
-    },
-    {
-      "library": "bootstrap@5.3.3",
-      "destination": "wwwroot/lib/bootstrap/"
-    },
-    {
-      "library": "moment@2.30.1",
-      "destination": "wwwroot/lib/moment/"
-    },
-    {
-      "provider": "unpkg",
-      "library": "axios@1.7.7",
-      "destination": "wwwroot/lib/axios/"
-    }
   ]
 }
