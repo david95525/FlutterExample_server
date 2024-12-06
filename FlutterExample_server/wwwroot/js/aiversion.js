@@ -14,7 +14,12 @@ var base64 = "";
 var resultlist = [];
 scanElement.addEventListener("click", startCam);
 document.getElementById("scan_save_button").addEventListener("click", Back);
-closeElement.addEventListener("click", Close);
+closeElement.addEventListener("click", function () {
+    Close();
+    closeElement.setAttribute("hidden", "");
+    customscanElement.removeAttribute("hidden");
+    scanElement.removeAttribute("hidden");
+});
 //date
 let nowdate = moment(new Date()).format("YYYY/MM/DD");
 dateElement.value = nowdate;
@@ -45,8 +50,21 @@ function videoDimensions(video) {
     else height = width / videoRatio;
     return [width, height];
 }
+function Close() {
+    if (document.getElementById("result_show")) {
+        document.getElementById("result_show").remove();
+    }
+    tracks.forEach((track) => {
+        track.stop();
+    });
+    videoElement.srcObject = null;
+    videoElement.setAttribute("hidden", "");
+    scanningElement.setAttribute("hidden", "");
+    document.getElementById("content").textContent = "";
+}
 function startCam() {
     scanElement.setAttribute("hidden", "");
+    customscanElement.setAttribute("hidden", "");
     videoElement.removeAttribute("hidden");
     closeElement.removeAttribute("hidden");
     //scan
@@ -88,6 +106,7 @@ function ImageAnalyze() {
     axios.post("/AzureAIVision/ImageAnalyze", data, config)
         .then(function (response) {
             if (response.status === 200) {
+                scanningElement.setAttribute("hidden", "");
                 let result = response.data;
                 sysElement.value = result.sys;
                 diaElement.value = result.dia;
@@ -98,21 +117,21 @@ function ImageAnalyze() {
                 }
                 let predictions = [
                     {
-                        value: result.sys.toString(), x: 20, y: 25,
+                        value: result.sys.toString(), x: 10, y: 25,
                         x1: locations[0].x1,
                         x2: locations[0].x2,
                         y1: locations[0].y1,
                         y3: locations[0].y3
                     },
                     {
-                        value: result.dia.toString(), x: 20, y: 55,
+                        value: result.dia.toString(), x: 10, y: 65,
                         x1: locations[1].x1,
                         x2: locations[1].x2,
                         y1: locations[1].y1,
                         y3: locations[1].y3
                     },
                     {
-                        value: result.pul.toString(), x: 20, y: 85,
+                        value: result.pul.toString(), x: 10, y: 105,
                         x1: locations[2].x1,
                         x2: locations[2].x2,
                         y1: locations[2].y1,
@@ -129,22 +148,7 @@ function ImageAnalyze() {
             }
         }).catch(err => { console.log(err); });
 }
-function Close() {
-    if (timeoutID) {
-        window.clearInterval(timeoutID);
-    }
-    if (document.getElementById("result_show")) {
-        document.getElementById("result_show").remove();
-    }
-    tracks.forEach((track) => {
-        track.stop();
-    });
-    videoElement.srcObject = null;
-    videoElement.setAttribute("hidden", "");
-    scanningElement.setAttribute("hidden", "");
-    closeElement.setAttribute("hidden", "");
-    scanElement.removeAttribute("hidden");
-}
+
 function Back() {
     let sys = document.getElementById("sys").value;
     let dia = document.getElementById("dia").value;
